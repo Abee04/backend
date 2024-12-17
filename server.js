@@ -31,7 +31,7 @@ const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: 'tothefuture2407@gmail.com', // Your Gmail
-    pass: 'othk obnr qpjv hxcn',       // Replace with your Gmail app password
+    pass: 'othk obnr qpjv hxcn',         // Replace with your Gmail app password
   },
 });
 
@@ -98,6 +98,7 @@ app.post('/schedule-email', upload.single('image'), async (req, res) => {
   }
 });
 
+// Start server
 const PORT = process.env.PORT || 1000; // Fallback to 5000 if the PORT env variable is not set
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

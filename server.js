@@ -93,7 +93,8 @@ app.post('/schedule-email', upload.single('image'), async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 5000; // Fallback to 5000 if the PORT env variable is not set
+const PORT = process.env.PORT || 10000;  // Render dynamically provides this port
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+

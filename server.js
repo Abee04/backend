@@ -47,7 +47,7 @@ app.post('/schedule-email', upload.single('image'), async (req, res) => {
   }
 
   const mailOptions = {
-    from: 'your-email@gmail.com',
+    from: 'tmadhumitha24@gmail.com',
     to: recipient,
     subject: subject,
     html: body,

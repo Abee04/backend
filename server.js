@@ -43,7 +43,7 @@ const sendEmail = (email) => {
   });
 
   const mailOptions = {
-    from: "your-email@gmail.com",   // Replace with your email
+    from: "tmadhumitha24@gmail.com",   // Replace with your email
     to: email.recipient,
     subject: email.subject || "Scheduled Email",
     text: email.body,
@@ -75,4 +75,3 @@ const PORT = process.env.PORT || 5000; // Use Render's port or default to 5000 i
 app.listen(PORT, () => {
   console.log(`Backend server running at http://localhost:${PORT}`);
 });
-

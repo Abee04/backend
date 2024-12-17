@@ -1,77 +1,82 @@
-const express = require("express");
-const nodemailer = require("nodemailer");
-const bodyParser = require("body-parser");
-const cron = require("node-cron");
-const cors = require("cors");
+const express = require('express');
+const nodemailer = require('nodemailer');
+const multer = require('multer');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const path = require('path');
+const schedule = require('node-schedule');  // Import node-schedule
 
 const app = express();
 
-// Middleware setup
-app.use(bodyParser.json());
+// Middleware
 app.use(cors());
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
-const emailQueue = []; // Temporary array to store scheduled emails
+// Configure Multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
 
-// Endpoint to schedule an email
-app.post("/schedule-email", (req, res) => {
+const upload = multer({ storage: storage });
+
+// Nodemailer transporter configuration
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: "tmadhumitha24@gmail.com",       // Replace with your email
+    pass: "xwnf ghxe irzj zrtc",    // Replace with your Gmail app password
+  },
+});
+
+// Route to handle email scheduling
+app.post('/schedule-email', upload.single('image'), async (req, res) => {
   const { recipient, subject, body, sendDate, sendTime } = req.body;
 
-  if (!recipient || !sendDate || !sendTime || !body) {
-    return res.status(400).json({ message: "All fields are required" });
+  // Combine the send date and time to create a Date object
+  const scheduledSendDate = new Date(`${sendDate}T${sendTime}:00`);
+
+  // Ensure the scheduled time is in the future
+  if (scheduledSendDate <= new Date()) {
+    return res.status(400).json({ message: 'Scheduled time must be in the future.' });
   }
-
-  // Combine the date and time into a full Date object
-  const sendDateTime = new Date(`${sendDate}T${sendTime}:00`);
-
-  if (sendDateTime <= new Date()) {
-    return res.status(400).json({ message: "Scheduled time must be in the future!" });
-  }
-
-  // Add the email to the queue
-  emailQueue.push({ recipient, subject, body, sendDateTime });
-  res.status(200).json({ message: "Email scheduled successfully" });
-});
-
-// Function to send emails using Nodemailer
-const sendEmail = (email) => {
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: "tmadhumitha24@gmail.com",  // Replace with your email
-      pass: "xwnf ghxe irzj zrtc",     // Replace with your Gmail app password
-    },
-  });
 
   const mailOptions = {
-    from: "tmadhumitha24@gmail.com",   // Replace with your email
-    to: email.recipient,
-    subject: email.subject || "Scheduled Email",
-    text: email.body,
+    from: 'your-email@gmail.com',
+    to: recipient,
+    subject: subject,
+    html: body,
   };
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error("Error sending email:", error);
-    } else {
-      console.log("Email sent:", info.response);
-    }
-  });
-};
+  if (req.file) {
+    mailOptions.attachments = [
+      {
+        filename: req.file.originalname,
+        path: path.join(__dirname, 'uploads', req.file.filename),
+      },
+    ];
+  }
 
-// Cron job to send emails at the correct time
-cron.schedule("* * * * *", () => {
-  const now = new Date();
-  
-  // Loop through the email queue and check for emails to send
-  emailQueue.forEach((email, index) => {
-    if (email.sendDateTime <= now) {
-      sendEmail(email);
-      emailQueue.splice(index, 1); // Remove sent email from the queue
+  // Use node-schedule to schedule the email at the specified time
+  schedule.scheduleJob(scheduledSendDate, async () => {
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log(`Email sent to ${recipient} at ${scheduledSendDate}`);
+    } catch (error) {
+      console.error('Error sending email:', error);
     }
   });
+
+  res.status(200).json({ message: `Email scheduled to be sent at ${scheduledSendDate.toLocaleString()}.` });
 });
 
-const PORT = process.env.PORT || 5000; // Use Render's port or default to 5000 if running locally
+// Start server and listen on the dynamically assigned port from Render
+const PORT = process.env.PORT || 5000; // Fallback to 5000 if the PORT env variable is not set
 app.listen(PORT, () => {
-  console.log(`Backend server running at http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

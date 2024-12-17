@@ -29,8 +29,8 @@ const upload = multer({ storage: storage });
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: "tmadhumitha24@gmail.com",       // Replace with your email
-    pass: "xwnf ghxe irzj zrtc",    // Replace with your Gmail app password
+    user: "tothefuture240724@gmail.com",       // Replace with your email
+    pass: "othk obnr qpjv hxcn",    // Replace with your Gmail app password
   },
 });
 
@@ -47,7 +47,7 @@ app.post('/schedule-email', upload.single('image'), async (req, res) => {
   }
 
   const mailOptions = {
-    from: 'tmadhumitha24@gmail.com',
+    from: 'tothefuture240724@gmail.com',
     to: recipient,
     subject: subject,
     html: body,

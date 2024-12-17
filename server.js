@@ -61,7 +61,7 @@ app.post('/schedule-email', upload.single('image'), async (req, res) => {
 
     // Configure email options
     const mailOptions = {
-      from: '"ToTheFuture" <tothefuture2407@gmail.com>',
+      from: '"Your App Name" <tothefuture2407@gmail.com>',
       to: recipient, // Recipient's email
       subject: subject.trim(),
       html: body.trim(),
@@ -77,25 +77,28 @@ app.post('/schedule-email', upload.single('image'), async (req, res) => {
       ];
     }
 
+    // Log when the email is scheduled
+    console.log(`Email scheduled for ${recipient} at ${scheduledSendDate.toISOString()}`);
+
     // Schedule the email using node-schedule (in UTC)
     schedule.scheduleJob(scheduledSendDate, async () => {
       try {
+        console.log(`Email sending to ${recipient} at ${new Date().toISOString()}`);
         await transporter.sendMail(mailOptions);
-        console.log(`Email successfully sent to ${recipient} at ${scheduledSendDate}`);
+        console.log(`Email successfully sent to ${recipient} at ${new Date().toISOString()}`);
       } catch (error) {
         console.error('Failed to send email:', error.message);
       }
     });
 
-    console.log(`Email scheduled for ${recipient} at ${scheduledSendDate}`);
-    res.status(200).json({ message: `Email scheduled to be sent at ${scheduledSendDate.toLocaleString()}.` });
+    res.status(200).json({ message: `Email scheduled to be sent at ${scheduledSendDate.toISOString()}.` });
   } catch (error) {
     console.error('Error scheduling email:', error.message);
     res.status(500).json({ message: 'Internal server error.' });
   }
 });
 
-const PORT = process.env.PORT || 5000; // Fallback to 5000 if the PORT env variable is not set
+const PORT = process.env.PORT || 1000; // Fallback to 5000 if the PORT env variable is not set
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

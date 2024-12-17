@@ -46,8 +46,10 @@ app.post('/schedule-email', upload.single('image'), async (req, res) => {
       return res.status(400).json({ message: 'All fields (recipient, subject, body, sendDate, sendTime) are required.' });
     }
 
-    // Combine the send date and time to create a Date object
-    const scheduledSendDate = new Date(`${sendDate}T${sendTime}:00`);
+    // Combine the send date and time to create a Date object in UTC
+    const localDateTime = new Date(`${sendDate}T${sendTime}:00`); // Local time input
+    const scheduledSendDate = new Date(localDateTime.toLocaleString('en-US', { timeZone: 'UTC' })); // Convert to UTC
+    
     if (isNaN(scheduledSendDate.getTime())) {
       return res.status(400).json({ message: 'Invalid date or time format.' });
     }
@@ -59,7 +61,7 @@ app.post('/schedule-email', upload.single('image'), async (req, res) => {
 
     // Configure email options
     const mailOptions = {
-      from: '"Your App Name" <tothefuture2407@gmail.com>',
+      from: '"ToTheFuture" <tothefuture2407@gmail.com>',
       to: recipient, // Recipient's email
       subject: subject.trim(),
       html: body.trim(),
@@ -75,32 +77,15 @@ app.post('/schedule-email', upload.single('image'), async (req, res) => {
       ];
     }
 
-    // Log for debugging the scheduled time
-    console.log(`Scheduled Send Date: ${scheduledSendDate}`);
-
-    // Temporarily use setTimeout for testing (send email after 10 seconds)
-    const delay = scheduledSendDate.getTime() - Date.now();
-    if (delay > 0) {
-      console.log(`Email will be sent in ${delay}ms`);
-      setTimeout(async () => {
-        try {
-          await transporter.sendMail(mailOptions);
-          console.log(`Email successfully sent to ${recipient} at ${scheduledSendDate}`);
-        } catch (error) {
-          console.error('Failed to send email:', error.message);
-        }
-      }, delay);
-    }
-
-    // Using node-schedule for actual scheduling
-    // schedule.scheduleJob(scheduledSendDate, async () => {
-    //   try {
-    //     await transporter.sendMail(mailOptions);
-    //     console.log(`Email successfully sent to ${recipient} at ${scheduledSendDate}`);
-    //   } catch (error) {
-    //     console.error('Failed to send email:', error.message);
-    //   }
-    // });
+    // Schedule the email using node-schedule (in UTC)
+    schedule.scheduleJob(scheduledSendDate, async () => {
+      try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Email successfully sent to ${recipient} at ${scheduledSendDate}`);
+      } catch (error) {
+        console.error('Failed to send email:', error.message);
+      }
+    });
 
     console.log(`Email scheduled for ${recipient} at ${scheduledSendDate}`);
     res.status(200).json({ message: `Email scheduled to be sent at ${scheduledSendDate.toLocaleString()}.` });
@@ -110,7 +95,7 @@ app.post('/schedule-email', upload.single('image'), async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 10000; // Fallback to 10000 if the PORT env variable is not set
+const PORT = process.env.PORT || 5000; // Fallback to 5000 if the PORT env variable is not set
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

@@ -56,7 +56,7 @@ const sendEmail = (email) => {
       console.log("Email sent:", info.response);
     }
   });
-});
+};
 
 // Cron job to send emails at the correct time
 cron.schedule("* * * * *", () => {
@@ -71,8 +71,8 @@ cron.schedule("* * * * *", () => {
   });
 });
 
-// Ensure the app binds to the correct port on Render
 const PORT = process.env.PORT || 5000; // Use Render's port or default to 5000 if running locally
 app.listen(PORT, () => {
   console.log(`Backend server running at http://localhost:${PORT}`);
 });
+

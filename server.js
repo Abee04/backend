@@ -5,6 +5,8 @@ const cron = require("node-cron");
 const cors = require("cors");
 
 const app = express();
+
+// Middleware setup
 app.use(bodyParser.json());
 app.use(cors());
 
@@ -20,11 +22,12 @@ app.post("/schedule-email", (req, res) => {
 
   // Combine the date and time into a full Date object
   const sendDateTime = new Date(`${sendDate}T${sendTime}:00`);
-  
+
   if (sendDateTime <= new Date()) {
     return res.status(400).json({ message: "Scheduled time must be in the future!" });
   }
 
+  // Add the email to the queue
   emailQueue.push({ recipient, subject, body, sendDateTime });
   res.status(200).json({ message: "Email scheduled successfully" });
 });
@@ -34,13 +37,13 @@ const sendEmail = (email) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "tmadhumitha24@gmail.com",       // Replace with your email
-      pass: "xwnf ghxe irzj zrtc",       // Use Gmail App Password
+      user: "tmadhumitha24@gmail.com",  // Replace with your email
+      pass: "xwnf ghxe irzj zrtc",     // Replace with your Gmail app password
     },
   });
 
   const mailOptions = {
-    from: "your-email@gmail.com",
+    from: "your-email@gmail.com",   // Replace with your email
     to: email.recipient,
     subject: email.subject || "Scheduled Email",
     text: email.body,
@@ -59,7 +62,7 @@ const sendEmail = (email) => {
 cron.schedule("* * * * *", () => {
   const now = new Date();
   
-  // Loop through the queue and check for emails to send
+  // Loop through the email queue and check for emails to send
   emailQueue.forEach((email, index) => {
     if (email.sendDateTime <= now) {
       sendEmail(email);
@@ -68,7 +71,8 @@ cron.schedule("* * * * *", () => {
   });
 });
 
-const PORT = 5000;
+// Start the server
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Backend server running at http://localhost:${PORT}`);
 });

@@ -75,15 +75,32 @@ app.post('/schedule-email', upload.single('image'), async (req, res) => {
       ];
     }
 
-    // Schedule the email using node-schedule
-    schedule.scheduleJob(scheduledSendDate, async () => {
-      try {
-        await transporter.sendMail(mailOptions);
-        console.log(`Email successfully sent to ${recipient} at ${scheduledSendDate}`);
-      } catch (error) {
-        console.error('Failed to send email:', error.message);
-      }
-    });
+    // Log for debugging the scheduled time
+    console.log(`Scheduled Send Date: ${scheduledSendDate}`);
+
+    // Temporarily use setTimeout for testing (send email after 10 seconds)
+    const delay = scheduledSendDate.getTime() - Date.now();
+    if (delay > 0) {
+      console.log(`Email will be sent in ${delay}ms`);
+      setTimeout(async () => {
+        try {
+          await transporter.sendMail(mailOptions);
+          console.log(`Email successfully sent to ${recipient} at ${scheduledSendDate}`);
+        } catch (error) {
+          console.error('Failed to send email:', error.message);
+        }
+      }, delay);
+    }
+
+    // Using node-schedule for actual scheduling
+    // schedule.scheduleJob(scheduledSendDate, async () => {
+    //   try {
+    //     await transporter.sendMail(mailOptions);
+    //     console.log(`Email successfully sent to ${recipient} at ${scheduledSendDate}`);
+    //   } catch (error) {
+    //     console.error('Failed to send email:', error.message);
+    //   }
+    // });
 
     console.log(`Email scheduled for ${recipient} at ${scheduledSendDate}`);
     res.status(200).json({ message: `Email scheduled to be sent at ${scheduledSendDate.toLocaleString()}.` });
@@ -93,8 +110,7 @@ app.post('/schedule-email', upload.single('image'), async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 10000;  // Render dynamically provides this port
+const PORT = process.env.PORT || 10000; // Fallback to 10000 if the PORT env variable is not set
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
